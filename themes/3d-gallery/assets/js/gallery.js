@@ -47,10 +47,99 @@ const threeCDN = mount?.dataset.threeCdn || "https://esm.sh/three@0.168.0";
 
 if (mount && projects.length && useThreeCDN) {
   initGallery().catch(() => {
-    fallback?.classList.add("is-visible");
+    initDomGallery();
   });
 } else {
-  fallback?.classList.add("is-visible");
+  initDomGallery();
+}
+
+function setCaption(title, category) {
+  if (!caption) return;
+  caption.replaceChildren(
+    Object.assign(document.createElement("p"), { textContent: title }),
+    Object.assign(document.createElement("p"), { textContent: category || "Project" }),
+  );
+}
+
+function initDomGallery() {
+  if (!fallback) return;
+
+  const cards = [...fallback.querySelectorAll("[data-project]")];
+  fallback.classList.add("is-visible", "is-scrollable");
+
+  let target = 0;
+  let current = 0;
+  let max = 0;
+  let dragStart = 0;
+  let startTarget = 0;
+  let dragDistance = 0;
+  let isDragging = false;
+
+  function measure() {
+    const stageWidth = fallback.parentElement?.clientWidth || window.innerWidth;
+    max = Math.max(0, fallback.scrollWidth - stageWidth);
+    target = Math.min(Math.max(target, -max), 0);
+  }
+
+  function updateScrollbar() {
+    if (!scrollbar) return;
+    const progress = max ? Math.abs(current) / max : 0;
+    scrollbar.style.transform = `translateX(${progress * 92}vw)`;
+  }
+
+  function animate(time) {
+    current += (target - current) * 0.09;
+    fallback.style.setProperty("--gallery-x", `${current}px`);
+
+    cards.forEach((card, index) => {
+      const y = Math.sin(time * 0.001 + index * 0.85) * 5;
+      card.style.setProperty("--float-y", `${y}px`);
+    });
+
+    updateScrollbar();
+    requestAnimationFrame(animate);
+  }
+
+  cards.forEach((card) => {
+    card.addEventListener("pointerenter", () => {
+      setCaption(card.dataset.title || "Untitled", card.dataset.category || "Project");
+    });
+  });
+
+  fallback.addEventListener("pointerdown", (event) => {
+    isDragging = true;
+    dragStart = event.clientX;
+    startTarget = target;
+    dragDistance = 0;
+    fallback.setPointerCapture(event.pointerId);
+  });
+
+  fallback.addEventListener("pointermove", (event) => {
+    if (!isDragging) return;
+    const delta = event.clientX - dragStart;
+    dragDistance = Math.max(dragDistance, Math.abs(delta));
+    target = Math.min(Math.max(startTarget + delta, -max), 0);
+  });
+
+  fallback.addEventListener("pointerup", (event) => {
+    isDragging = false;
+    fallback.releasePointerCapture(event.pointerId);
+  });
+
+  fallback.addEventListener("click", (event) => {
+    if (dragDistance > 6) {
+      event.preventDefault();
+    }
+  }, true);
+
+  window.addEventListener("wheel", (event) => {
+    if (!fallback.classList.contains("is-scrollable")) return;
+    target = Math.min(Math.max(target - event.deltaY * 0.85 - event.deltaX, -max), 0);
+  }, { passive: true });
+
+  window.addEventListener("resize", measure);
+  measure();
+  requestAnimationFrame(animate);
 }
 
 async function initGallery() {
@@ -127,10 +216,7 @@ async function initGallery() {
     if (hit !== active) {
       active = hit;
       if (caption && active) {
-        caption.replaceChildren(
-          Object.assign(document.createElement("p"), { textContent: active.userData.title }),
-          Object.assign(document.createElement("p"), { textContent: active.userData.category || "Project" }),
-        );
+        setCaption(active.userData.title, active.userData.category || "Project");
       }
     }
   }
