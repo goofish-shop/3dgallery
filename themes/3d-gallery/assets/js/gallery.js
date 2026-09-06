@@ -78,8 +78,8 @@ function initDomGallery() {
 
   let target = 0;
   let current = 0;
-  let velocity = 0;
-  let max = 0;
+  let max = 1;
+  let rowCount = 3;
   let trackWidth = 0;
   let dragStart = 0;
   let startTarget = 0;
@@ -117,6 +117,7 @@ function initDomGallery() {
     const stageWidth = fallback.parentElement?.clientWidth || window.innerWidth;
     const stageHeight = fallback.parentElement?.clientHeight || window.innerHeight;
     const rows = stageWidth < 760 ? 8 : 3;
+    rowCount = rows;
     const cellX = stageWidth < 760 ? 86 : 98;
     const rowGap = stageWidth < 760 ? 68 : 112;
     const top = stageWidth < 760 ? 42 : 42;
@@ -143,11 +144,12 @@ function initDomGallery() {
       card.style.setProperty("--card-h", `${h}px`);
       card.style.setProperty("--project-index", index);
       card.style.setProperty("--explore-y", `${42 + index * 67}px`);
+      card.dataset.row = String(row);
     });
 
-    max = Math.max(0, trackWidth - stageWidth);
-    target = wrapPosition(target, max);
-    current = wrapPosition(current, max);
+    max = 1;
+    target = clampProgress(target);
+    current = clampProgress(current);
 
     if (activeIndex < 0 && cards.length) {
       activeIndex = Math.min(12, cards.length - 1);
@@ -157,26 +159,20 @@ function initDomGallery() {
 
   function updateScrollbar() {
     if (!scrollbar) return;
-    const progress = max ? Math.abs(current) / max : 0;
-    scrollbar.style.transform = `translateX(${progress * Math.max(0, window.innerWidth - 48)}px)`;
+    scrollbar.style.transform = `translateX(${current * Math.max(0, window.innerWidth - 48)}px)`;
   }
 
-  function wrapPosition(value, limit) {
-    if (!limit) return 0;
-    if (value < -limit) return value + limit;
-    if (value > 0) return value - limit;
-    return value;
+  function clampProgress(value) {
+    return Math.min(Math.max(value, 0), 1);
   }
 
-  function syncActiveFromCamera() {
-    if (!cards.length || !max) return;
-    const rows = window.innerWidth < 760 ? 8 : 3;
-    const progress = Math.abs(current) / max;
-    const columns = Math.ceil(cards.length / rows);
-    const previewColumn = Math.min(columns - 1, Math.max(0, Math.round(progress * (columns - 1))));
+  function syncActiveFromDrawer() {
+    if (!cards.length) return;
+    const columns = Math.ceil(cards.length / rowCount);
+    const previewColumn = Math.min(columns - 1, Math.max(0, Math.round(current * (columns - 1))));
     if (previewColumn === lastPreviewColumn) return;
     lastPreviewColumn = previewColumn;
-    const nextIndex = Math.min(cards.length - 1, previewColumn * rows + Math.floor(rows / 2));
+    const nextIndex = Math.min(cards.length - 1, previewColumn * rowCount + Math.floor(rowCount / 2));
     if (nextIndex !== activeIndex) {
       activeIndex = nextIndex;
       showPreview(cards[activeIndex]);
@@ -184,19 +180,20 @@ function initDomGallery() {
   }
 
   function animate(time) {
-    target = wrapPosition(target + velocity, max);
-    velocity *= 0.91;
-    current += (target - current) * 0.055;
-    current = wrapPosition(current, max);
-    fallback.style.setProperty("--gallery-x", `${current}px`);
+    current += (target - current) * 0.075;
 
     cards.forEach((card, index) => {
+      const row = Number(card.dataset.row || 0);
+      const rowDirection = row % 2 === 0 ? -1 : 1;
+      const rowSpeed = [1, 0.72, 0.92, 0.6, 0.82, 0.68, 0.96, 0.74][row % 8];
+      const drawerX = current * rowDirection * rowSpeed * window.innerWidth * 0.92;
       const y = Math.sin(time * 0.001 + index * 0.85) * 5;
+      card.style.setProperty("--drawer-x", `${drawerX}px`);
       card.style.setProperty("--float-y", `${y}px`);
     });
 
     updateScrollbar();
-    if (Math.abs(velocity) > 0.03) syncActiveFromCamera();
+    syncActiveFromDrawer();
     requestAnimationFrame(animate);
   }
 
@@ -226,8 +223,7 @@ function initDomGallery() {
     if (!isDragging) return;
     const delta = event.clientX - dragStart;
     dragDistance = Math.max(dragDistance, Math.abs(delta));
-    target = wrapPosition(startTarget + delta, max);
-    velocity = delta * 0.015;
+    target = clampProgress(startTarget - delta / Math.max(1, window.innerWidth * 1.6));
   });
 
   fallback.addEventListener("pointerup", (event) => {
@@ -243,7 +239,7 @@ function initDomGallery() {
 
   window.addEventListener("wheel", (event) => {
     if (!fallback.classList.contains("is-scrollable")) return;
-    velocity -= event.deltaY * 0.12 + event.deltaX * 0.06;
+    target = clampProgress(target + event.deltaY * 0.00018 + event.deltaX * 0.00012);
   }, { passive: true });
 
   window.addEventListener("resize", measure);
