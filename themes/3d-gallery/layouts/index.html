@@ -1,0 +1,22 @@
+{{ define "main" }}
+  {{ $projects := where site.RegularPages "Section" "projects" }}
+  <section class="gallery-stage" aria-label="Featured gallery">
+    <div
+      class="gallery-canvas"
+      data-gallery
+      data-three-cdn-enabled="{{ site.Params.gallery.useThreeCDN | default false }}"
+      data-three-cdn="{{ site.Params.gallery.threeCDN | default "https://esm.sh/three@0.168.0" }}"></div>
+    <div class="gallery-fallback" data-gallery-fallback>
+      {{ range $projects }}
+        {{ partial "project-card.html" . }}
+      {{ end }}
+    </div>
+    <div class="gallery-caption" data-gallery-caption>
+      <p>{{ site.Params.author | default site.Title }}</p>
+      <p>Selected works</p>
+    </div>
+    <div class="gallery-scrollbar" aria-hidden="true">
+      <span data-gallery-scrollbar></span>
+    </div>
+  </section>
+{{ end }}

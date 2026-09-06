@@ -1,0 +1,24 @@
+{{ define "main" }}
+  <article class="project-detail">
+    <header class="project-hero">
+      <div>
+        <p>{{ delimit .Params.categories " / " }}</p>
+        <h1>{{ .Title }}</h1>
+      </div>
+      <dl>
+        {{ with .Params.year }}<div><dt>Year</dt><dd>{{ . }}</dd></div>{{ end }}
+        {{ with .Params.client }}<div><dt>Client</dt><dd>{{ . }}</dd></div>{{ end }}
+      </dl>
+    </header>
+
+    {{ with .Params.image }}
+      <figure class="project-image">
+        <img src="{{ . | relURL }}" alt="{{ $.Title }}">
+      </figure>
+    {{ end }}
+
+    <div class="project-body">
+      {{ .Content }}
+    </div>
+  </article>
+{{ end }}

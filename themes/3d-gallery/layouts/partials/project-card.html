@@ -1,0 +1,23 @@
+{{ $image := .Params.image }}
+{{ $category := "Project" }}
+{{ with .Params.categories }}
+  {{ $category = delimit . " / " }}
+{{ end }}
+<a
+  class="project-card"
+  href="{{ .RelPermalink }}"
+  data-project
+  data-title="{{ .Title }}"
+  data-category="{{ $category }}"
+  data-color="{{ .Params.color | default "#d8d5ce" }}"
+  data-image="{{ with $image }}{{ . | relURL }}{{ end }}">
+  {{ if $image }}
+    <img src="{{ $image | relURL }}" alt="{{ .Title }}" loading="lazy">
+  {{ else }}
+    <span class="project-poster" style="--poster: {{ .Params.color | default "#d8d5ce" }}"></span>
+  {{ end }}
+  <span>
+    <strong>{{ .Title }}</strong>
+    <em>{{ $category }}</em>
+  </span>
+</a>

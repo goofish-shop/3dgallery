@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="{{ site.LanguageCode | default "en" }}">
+  {{ partial "head.html" . }}
+  <body data-kind="{{ .Kind }}" data-template="{{ .Type | default .Section }}">
+    <a class="skip-link" href="#main">Skip to content</a>
+    <div class="site-shell">
+      {{ partial "header.html" . }}
+      <main id="main" class="site-main">
+        {{ block "main" . }}{{ end }}
+      </main>
+    </div>
+    {{ $js := resources.Get "js/gallery.js" | minify | fingerprint }}
+    <script type="module" src="{{ $js.RelPermalink }}" integrity="{{ $js.Data.Integrity }}"></script>
+  </body>
+</html>

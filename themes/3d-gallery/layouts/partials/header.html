@@ -1,0 +1,34 @@
+<header class="site-header" data-header>
+  <nav class="nav-grid" aria-label="Primary">
+    <a class="brand" href="{{ site.Home.RelPermalink }}">{{ site.Title }}</a>
+
+    <button class="nav-button" type="button" data-panel-toggle="explore" aria-expanded="false">
+      Explore
+    </button>
+
+    <a href="{{ "/projects/" | relURL }}">Projects</a>
+
+    <button class="nav-button" type="button" data-panel-toggle="contact" aria-expanded="false">
+      Contact
+    </button>
+
+    <div class="nav-panel nav-panel-explore" data-panel="explore" aria-hidden="true">
+      {{ $items := site.Params.explore }}
+      {{ if not $items }}
+        {{ range site.Taxonomies.categories.ByCount }}
+          <a href="{{ .Page.RelPermalink }}">{{ .Page.Title }}</a>
+        {{ end }}
+      {{ else }}
+        {{ range $items }}
+          <a href="{{ .url | relURL }}">{{ .title }}</a>
+        {{ end }}
+      {{ end }}
+    </div>
+
+    <div class="nav-panel nav-panel-contact" data-panel="contact" aria-hidden="true">
+      {{ with site.Params.email }}<a href="mailto:{{ . }}">{{ . }}</a>{{ end }}
+      {{ with site.Params.instagramURL }}<a href="{{ . }}">{{ site.Params.instagram | default "Instagram" }}</a>{{ end }}
+      <span>&copy; {{ now.Year }} {{ site.Title }}, {{ site.Params.copyright | default "All Rights Reserved" }}</span>
+    </div>
+  </nav>
+</header>

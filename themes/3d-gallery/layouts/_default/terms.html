@@ -1,0 +1,25 @@
+{{ define "main" }}
+  <section class="list-view">
+    <header class="view-heading">
+      <p>{{ .Kind | title }}</p>
+      <h1>{{ .Title }}</h1>
+    </header>
+    <div class="project-grid">
+      {{ range .Data.Terms.Alphabetical }}
+        <a
+          class="project-card"
+          href="{{ .Page.RelPermalink }}"
+          data-project
+          data-title="{{ .Page.Title }}"
+          data-category="{{ .Count }} projects"
+          data-color="#d8d5ce">
+          <span class="project-poster" style="--poster: #d8d5ce"></span>
+          <span>
+            <strong>{{ .Page.Title }}</strong>
+            <em>{{ .Count }} projects</em>
+          </span>
+        </a>
+      {{ end }}
+    </div>
+  </section>
+{{ end }}

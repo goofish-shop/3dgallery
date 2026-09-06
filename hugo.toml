@@ -1,3 +1,35 @@
 baseURL = 'https://example.org/'
-locale = 'en-us'
-title = 'My New Hugo Project'
+languageCode = 'en-us'
+title = '3D Gallery'
+theme = '3d-gallery'
+
+[params]
+  description = 'A minimal WebGL-inspired portfolio theme for photographers, artists, and studios.'
+  author = '3D Gallery'
+  email = 'hello@example.com'
+  instagram = '@3dgallery'
+  instagramURL = 'https://instagram.com/'
+  copyright = 'All Rights Reserved'
+
+  [params.gallery]
+    useThreeCDN = false
+    threeCDN = 'https://esm.sh/three@0.168.0'
+
+  [[params.explore]]
+    title = 'People'
+    url = '/categories/people/'
+  [[params.explore]]
+    title = 'Portraits'
+    url = '/categories/portraits/'
+  [[params.explore]]
+    title = 'Nature'
+    url = '/categories/nature/'
+  [[params.explore]]
+    title = 'B&W'
+    url = '/categories/bw/'
+  [[params.explore]]
+    title = 'Still life'
+    url = '/categories/still-life/'
+  [[params.explore]]
+    title = 'Commercial'
+    url = '/categories/commercial/'

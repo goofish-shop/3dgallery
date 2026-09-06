@@ -1,0 +1,15 @@
+{{ define "main" }}
+  {{ $pages := .Pages }}
+  {{ if eq .Kind "taxonomy" }}{{ $pages = .Pages }}{{ end }}
+  <section class="list-view">
+    <header class="view-heading">
+      <p>{{ .Kind | title }}</p>
+      <h1>{{ .Title }}</h1>
+    </header>
+    <div class="project-grid">
+      {{ range $pages }}
+        {{ partial "project-card.html" . }}
+      {{ end }}
+    </div>
+  </section>
+{{ end }}

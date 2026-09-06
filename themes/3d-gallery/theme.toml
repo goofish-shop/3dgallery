@@ -1,0 +1,12 @@
+name = '3d-gallery'
+license = 'MIT'
+licenselink = 'https://opensource.org/licenses/MIT'
+description = 'A minimal 3D portfolio theme inspired by sparse editorial photography sites.'
+homepage = 'https://example.org/'
+tags = ['portfolio', 'gallery', 'photography', 'threejs', 'minimal']
+features = ['3D gallery', 'taxonomy filters', 'project pages', 'responsive navigation']
+min_version = '0.120.0'
+
+[author]
+  name = 'Codex'
+  homepage = 'https://openai.com/'
