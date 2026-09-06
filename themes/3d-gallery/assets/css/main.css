@@ -91,6 +91,10 @@ img {
   padding-left: var(--pad);
 }
 
+.nav-grid-compact {
+  grid-template-columns: 17% repeat(3, 1fr);
+}
+
 .nav-grid > a,
 .nav-grid > button {
   min-width: 0;
@@ -140,6 +144,27 @@ img {
   min-height: 15px;
   line-height: 15px;
   padding-right: 12px;
+}
+
+.nav-panel-explore {
+  left: calc(17% - 20px);
+  right: auto;
+  display: block;
+  width: max-content;
+  min-width: 120px;
+  padding: 4px 5px 12px 20px;
+  background: transparent;
+  backdrop-filter: none;
+}
+
+.nav-panel-explore a {
+  display: block;
+  padding-right: 0;
+}
+
+.nav-panel-contact {
+  left: 17%;
+  right: 0;
 }
 
 .site-main {
@@ -363,6 +388,10 @@ img {
     padding-right: var(--pad);
   }
 
+  .nav-grid-compact {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .brand {
     grid-column: 1 / -1;
     height: 15px;
@@ -378,6 +407,16 @@ img {
     left: 0;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     padding-left: var(--pad);
+  }
+
+  .nav-panel-explore {
+    left: var(--pad);
+    min-width: 120px;
+    padding-left: 0;
+  }
+
+  .nav-panel-contact {
+    left: 0;
   }
 
   .gallery-stage {

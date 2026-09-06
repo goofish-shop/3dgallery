@@ -15,6 +15,9 @@ theme = '3d-gallery'
     useThreeCDN = false
     threeCDN = 'https://esm.sh/three@0.168.0'
 
+  [params.navigation]
+    showExplore = true
+
   [[params.explore]]
     title = 'People'
     url = '/categories/people/'
