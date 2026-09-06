@@ -243,7 +243,7 @@ function initDomGallery() {
 
   window.addEventListener("wheel", (event) => {
     if (!fallback.classList.contains("is-scrollable")) return;
-    velocity -= event.deltaY * 0.035 + event.deltaX * 0.02;
+    velocity -= event.deltaY * 0.12 + event.deltaX * 0.06;
   }, { passive: true });
 
   window.addEventListener("resize", measure);
