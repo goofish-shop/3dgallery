@@ -61,6 +61,9 @@ function setCaption(title, category) {
     Object.assign(document.createElement("p"), { textContent: title }),
     Object.assign(document.createElement("p"), { textContent: category || "Project" }),
   );
+  caption.classList.add("is-visible");
+  window.clearTimeout(caption.hideTimer);
+  caption.hideTimer = window.setTimeout(() => caption.classList.remove("is-visible"), 1600);
 }
 
 function initDomGallery() {
@@ -94,13 +97,11 @@ function initDomGallery() {
     preview.setAttribute("aria-label", title);
     preview.classList.add("is-visible");
     preview.removeAttribute("aria-hidden");
-    preview.replaceChildren(
-      image
-        ? Object.assign(document.createElement("img"), { src: image, alt: title })
-        : Object.assign(document.createElement("span"), { className: "project-poster" }),
-    );
+    const previewMedia = image
+      ? Object.assign(document.createElement("img"), { src: image, alt: title })
+      : Object.assign(document.createElement("span"), { className: "project-poster" });
+    preview.replaceChildren(previewMedia);
     preview.firstElementChild?.style.setProperty("--poster", color);
-    setCaption(title, category);
   }
 
   function measure() {
@@ -119,10 +120,11 @@ function initDomGallery() {
       const row = index % rows;
       const jitterX = ((index * 37) % 28) - 14;
       const jitterY = ((index * 53) % 26) - 13;
-      const wide = index % 7 === 2;
-      const square = index % 5 === 0;
-      const w = square ? 48 : wide ? 66 : 40 + (index % 3) * 6;
-      const h = square ? 48 : wide ? 44 : 54 + (index % 4) * 8;
+      const img = card.querySelector("img");
+      const naturalRatio = img?.naturalWidth && img?.naturalHeight ? img.naturalWidth / img.naturalHeight : null;
+      const ratio = naturalRatio || [0.68, 1, 1.38, 0.78, 1.18][index % 5];
+      const h = [48, 54, 62, 70, 44, 58][index % 6];
+      const w = Math.round(h * ratio);
       const x = startX + column * cellX + jitterX;
       const y = Math.min(stageHeight - 90, top + row * rowGap + jitterY);
 
