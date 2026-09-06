@@ -2,6 +2,7 @@ const toggles = document.querySelectorAll("[data-panel-toggle]");
 const panels = document.querySelectorAll("[data-panel]");
 
 function closePanels(except) {
+  document.querySelector(".gallery-stage")?.classList.toggle("is-explore-open", except === "explore");
   panels.forEach((panel) => {
     if (panel.dataset.panel !== except) {
       panel.classList.remove("is-open");
@@ -24,6 +25,7 @@ toggles.forEach((toggle) => {
     toggle.setAttribute("aria-expanded", String(next));
     panel?.classList.toggle("is-open", next);
     panel?.setAttribute("aria-hidden", String(!next));
+    document.querySelector(".gallery-stage")?.classList.toggle("is-explore-open", name === "explore" && next);
   });
 });
 
@@ -66,25 +68,85 @@ function initDomGallery() {
 
   const cards = [...fallback.querySelectorAll("[data-project]")];
   fallback.classList.add("is-visible", "is-scrollable");
+  const preview = document.createElement("a");
+  preview.className = "gallery-preview";
+  preview.setAttribute("aria-hidden", "true");
+  fallback.after(preview);
 
   let target = 0;
   let current = 0;
   let max = 0;
+  let trackWidth = 0;
   let dragStart = 0;
   let startTarget = 0;
   let dragDistance = 0;
   let isDragging = false;
+  let activeIndex = -1;
+
+  function showPreview(card) {
+    if (!card) return;
+    const title = card.dataset.title || "Untitled";
+    const category = card.dataset.category || "Project";
+    const image = card.dataset.image || "";
+    const color = card.dataset.color || "#d8d5ce";
+
+    preview.href = card.getAttribute("href") || "#";
+    preview.setAttribute("aria-label", title);
+    preview.classList.add("is-visible");
+    preview.removeAttribute("aria-hidden");
+    preview.replaceChildren(
+      image
+        ? Object.assign(document.createElement("img"), { src: image, alt: title })
+        : Object.assign(document.createElement("span"), { className: "project-poster" }),
+    );
+    preview.firstElementChild?.style.setProperty("--poster", color);
+    setCaption(title, category);
+  }
 
   function measure() {
     const stageWidth = fallback.parentElement?.clientWidth || window.innerWidth;
-    max = Math.max(0, fallback.scrollWidth - stageWidth);
+    const stageHeight = fallback.parentElement?.clientHeight || window.innerHeight;
+    const rows = stageWidth < 760 ? 8 : 3;
+    const cellX = stageWidth < 760 ? 92 : 98;
+    const rowGap = stageWidth < 760 ? 68 : 112;
+    const top = stageWidth < 760 ? 42 : 42;
+    const startX = stageWidth < 760 ? 10 : 18;
+    trackWidth = Math.max(stageWidth * 2.4, startX + Math.ceil(cards.length / rows) * cellX + stageWidth * 0.7);
+    fallback.style.setProperty("--gallery-width", `${trackWidth}px`);
+
+    cards.forEach((card, index) => {
+      const column = Math.floor(index / rows);
+      const row = index % rows;
+      const jitterX = ((index * 37) % 28) - 14;
+      const jitterY = ((index * 53) % 26) - 13;
+      const wide = index % 7 === 2;
+      const square = index % 5 === 0;
+      const w = square ? 48 : wide ? 66 : 40 + (index % 3) * 6;
+      const h = square ? 48 : wide ? 44 : 54 + (index % 4) * 8;
+      const x = startX + column * cellX + jitterX;
+      const y = Math.min(stageHeight - 90, top + row * rowGap + jitterY);
+
+      card.style.setProperty("--card-x", `${x}px`);
+      card.style.setProperty("--card-y", `${y}px`);
+      card.style.setProperty("--card-w", `${w}px`);
+      card.style.setProperty("--card-h", `${h}px`);
+      card.style.setProperty("--project-index", index);
+      card.style.setProperty("--explore-y", `${42 + index * 67}px`);
+    });
+
+    max = Math.max(0, trackWidth - stageWidth);
     target = Math.min(Math.max(target, -max), 0);
+
+    if (activeIndex < 0 && cards.length) {
+      activeIndex = Math.min(12, cards.length - 1);
+      showPreview(cards[activeIndex]);
+    }
   }
 
   function updateScrollbar() {
     if (!scrollbar) return;
     const progress = max ? Math.abs(current) / max : 0;
-    scrollbar.style.transform = `translateX(${progress * 92}vw)`;
+    scrollbar.style.transform = `translateX(${progress * Math.max(0, window.innerWidth - 48)}px)`;
   }
 
   function animate(time) {
@@ -102,7 +164,8 @@ function initDomGallery() {
 
   cards.forEach((card) => {
     card.addEventListener("pointerenter", () => {
-      setCaption(card.dataset.title || "Untitled", card.dataset.category || "Project");
+      activeIndex = cards.indexOf(card);
+      showPreview(card);
     });
   });
 
@@ -135,6 +198,15 @@ function initDomGallery() {
   window.addEventListener("wheel", (event) => {
     if (!fallback.classList.contains("is-scrollable")) return;
     target = Math.min(Math.max(target - event.deltaY * 0.85 - event.deltaX, -max), 0);
+
+    if (cards.length) {
+      const progress = max ? Math.abs(target) / max : 0;
+      const nextIndex = Math.min(cards.length - 1, Math.max(0, Math.round(progress * (cards.length - 1))));
+      if (nextIndex !== activeIndex) {
+        activeIndex = nextIndex;
+        showPreview(cards[activeIndex]);
+      }
+    }
   }, { passive: true });
 
   window.addEventListener("resize", measure);
@@ -272,7 +344,7 @@ async function initGallery() {
 
     if (scrollbar) {
       const progress = (((-group.position.x / width) % 1) + 1) % 1;
-      scrollbar.style.transform = `translateX(${progress * 92}vw)`;
+      scrollbar.style.transform = `translateX(${progress * Math.max(0, window.innerWidth - 48)}px)`;
     }
 
     renderer.render(scene, camera);

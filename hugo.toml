@@ -12,7 +12,7 @@ theme = '3d-gallery'
   copyright = 'All Rights Reserved'
 
   [params.gallery]
-    useThreeCDN = true
+    useThreeCDN = false
     threeCDN = 'https://esm.sh/three@0.168.0'
 
   [params.navigation]
