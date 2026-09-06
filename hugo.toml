@@ -1,4 +1,4 @@
-baseURL = 'https://example.org/'
+baseURL = 'https://goofish-shop.github.io/3dgallery/'
 languageCode = 'en-us'
 title = '3D Gallery'
 theme = '3d-gallery'
