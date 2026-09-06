@@ -78,6 +78,7 @@ function initDomGallery() {
 
   let target = 0;
   let current = 0;
+  let velocity = 0;
   let max = 0;
   let trackWidth = 0;
   let dragStart = 0;
@@ -85,6 +86,7 @@ function initDomGallery() {
   let dragDistance = 0;
   let isDragging = false;
   let activeIndex = -1;
+  let lastPreviewColumn = -1;
 
   function showPreview(card) {
     if (!card) return;
@@ -98,8 +100,15 @@ function initDomGallery() {
     preview.classList.add("is-visible");
     preview.removeAttribute("aria-hidden");
     const previewMedia = image
-      ? Object.assign(document.createElement("img"), { src: image, alt: title })
+      ? Object.assign(document.createElement("img"), { src: image, alt: "" })
       : Object.assign(document.createElement("span"), { className: "project-poster" });
+    if (image) {
+      previewMedia.addEventListener("error", () => {
+        const poster = Object.assign(document.createElement("span"), { className: "project-poster" });
+        poster.style.setProperty("--poster", color);
+        preview.replaceChildren(poster);
+      }, { once: true });
+    }
     preview.replaceChildren(previewMedia);
     preview.firstElementChild?.style.setProperty("--poster", color);
   }
@@ -108,11 +117,11 @@ function initDomGallery() {
     const stageWidth = fallback.parentElement?.clientWidth || window.innerWidth;
     const stageHeight = fallback.parentElement?.clientHeight || window.innerHeight;
     const rows = stageWidth < 760 ? 8 : 3;
-    const cellX = stageWidth < 760 ? 92 : 98;
+    const cellX = stageWidth < 760 ? 86 : 98;
     const rowGap = stageWidth < 760 ? 68 : 112;
     const top = stageWidth < 760 ? 42 : 42;
-    const startX = stageWidth < 760 ? 10 : 18;
-    trackWidth = Math.max(stageWidth * 2.4, startX + Math.ceil(cards.length / rows) * cellX + stageWidth * 0.7);
+    const startX = stageWidth < 760 ? 10 : 8;
+    trackWidth = Math.max(stageWidth * 2.2, startX + Math.ceil(cards.length / rows) * cellX + stageWidth * 0.35);
     fallback.style.setProperty("--gallery-width", `${trackWidth}px`);
 
     cards.forEach((card, index) => {
@@ -137,7 +146,8 @@ function initDomGallery() {
     });
 
     max = Math.max(0, trackWidth - stageWidth);
-    target = Math.min(Math.max(target, -max), 0);
+    target = wrapPosition(target, max);
+    current = wrapPosition(current, max);
 
     if (activeIndex < 0 && cards.length) {
       activeIndex = Math.min(12, cards.length - 1);
@@ -151,8 +161,33 @@ function initDomGallery() {
     scrollbar.style.transform = `translateX(${progress * Math.max(0, window.innerWidth - 48)}px)`;
   }
 
+  function wrapPosition(value, limit) {
+    if (!limit) return 0;
+    if (value < -limit) return value + limit;
+    if (value > 0) return value - limit;
+    return value;
+  }
+
+  function syncActiveFromCamera() {
+    if (!cards.length || !max) return;
+    const rows = window.innerWidth < 760 ? 8 : 3;
+    const progress = Math.abs(current) / max;
+    const columns = Math.ceil(cards.length / rows);
+    const previewColumn = Math.min(columns - 1, Math.max(0, Math.round(progress * (columns - 1))));
+    if (previewColumn === lastPreviewColumn) return;
+    lastPreviewColumn = previewColumn;
+    const nextIndex = Math.min(cards.length - 1, previewColumn * rows + Math.floor(rows / 2));
+    if (nextIndex !== activeIndex) {
+      activeIndex = nextIndex;
+      showPreview(cards[activeIndex]);
+    }
+  }
+
   function animate(time) {
-    current += (target - current) * 0.09;
+    target = wrapPosition(target + velocity, max);
+    velocity *= 0.91;
+    current += (target - current) * 0.055;
+    current = wrapPosition(current, max);
     fallback.style.setProperty("--gallery-x", `${current}px`);
 
     cards.forEach((card, index) => {
@@ -161,10 +196,18 @@ function initDomGallery() {
     });
 
     updateScrollbar();
+    if (Math.abs(velocity) > 0.03) syncActiveFromCamera();
     requestAnimationFrame(animate);
   }
 
   cards.forEach((card) => {
+    const img = card.querySelector("img");
+    img?.addEventListener("error", () => {
+      const poster = Object.assign(document.createElement("span"), { className: "project-poster" });
+      poster.style.setProperty("--poster", card.dataset.color || "#d8d5ce");
+      img.replaceWith(poster);
+    }, { once: true });
+
     card.addEventListener("pointerenter", () => {
       activeIndex = cards.indexOf(card);
       showPreview(card);
@@ -183,7 +226,8 @@ function initDomGallery() {
     if (!isDragging) return;
     const delta = event.clientX - dragStart;
     dragDistance = Math.max(dragDistance, Math.abs(delta));
-    target = Math.min(Math.max(startTarget + delta, -max), 0);
+    target = wrapPosition(startTarget + delta, max);
+    velocity = delta * 0.015;
   });
 
   fallback.addEventListener("pointerup", (event) => {
@@ -199,16 +243,7 @@ function initDomGallery() {
 
   window.addEventListener("wheel", (event) => {
     if (!fallback.classList.contains("is-scrollable")) return;
-    target = Math.min(Math.max(target - event.deltaY * 0.85 - event.deltaX, -max), 0);
-
-    if (cards.length) {
-      const progress = max ? Math.abs(target) / max : 0;
-      const nextIndex = Math.min(cards.length - 1, Math.max(0, Math.round(progress * (cards.length - 1))));
-      if (nextIndex !== activeIndex) {
-        activeIndex = nextIndex;
-        showPreview(cards[activeIndex]);
-      }
-    }
+    velocity -= event.deltaY * 0.035 + event.deltaX * 0.02;
   }, { passive: true });
 
   window.addEventListener("resize", measure);

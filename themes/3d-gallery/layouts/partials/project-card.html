@@ -12,7 +12,7 @@
   data-color="{{ .Params.color | default "#d8d5ce" }}"
   data-image="{{ with $image }}{{ . | relURL }}{{ end }}">
   {{ if $image }}
-    <img src="{{ $image | relURL }}" alt="{{ .Title }}" loading="lazy">
+    <img src="{{ $image | relURL }}" alt="" loading="lazy">
   {{ else }}
     <span class="project-poster" style="--poster: {{ .Params.color | default "#d8d5ce" }}"></span>
   {{ end }}
